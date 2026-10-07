@@ -51,7 +51,7 @@ function registrarEventos() {
 
     const eventos = {
 
-        btnImportar: importarExcel,
+        btnImportar: abrirSelectorExcel,
 
         btnComenzar: iniciarTest,
 
@@ -104,6 +104,30 @@ function registrarEventos() {
         );
 
     }
+
+    const inputExcel = document.getElementById("excelFile");
+
+    if (inputExcel) {
+        inputExcel.addEventListener("change", importarExcel);
+    }
+}
+
+
+/* =====================================
+   ABRIR SELECTOR DE EXCEL
+===================================== */
+
+function abrirSelectorExcel() {
+
+    const input = document.getElementById("excelFile");
+
+    if (!input) {
+        alert("No se encontró el selector de archivos.");
+        return;
+    }
+
+    input.value = "";
+    input.click();
 }
 
 
@@ -279,6 +303,7 @@ function generarSelectorHojas() {
             checkbox.value =
                 nombre;
 
+            checkbox.addEventListener("change", actualizarNumeroPreguntasPorSeleccion);
 
             label.appendChild(
                 checkbox
@@ -302,6 +327,39 @@ function generarSelectorHojas() {
 
         }
     );
+
+    actualizarNumeroPreguntasPorSeleccion();
+}
+
+
+function actualizarNumeroPreguntasPorSeleccion() {
+
+    const inputCantidad = document.getElementById("cantidadPreguntas");
+    const checks = document.querySelectorAll(".hojaCheck:checked");
+
+    if (!inputCantidad || !workbook) {
+        return;
+    }
+
+    let total = 0;
+
+    Array.from(checks).forEach(checkbox => {
+        const hoja = workbook.Sheets[checkbox.value];
+        if (!hoja) return;
+
+        const filas = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+        total += filas.filter(fila => String(fila["INFINITIVE"] || "").trim() !== "").length;
+    });
+
+    inputCantidad.value = total > 0 ? total : "";
+    inputCantidad.max = total > 0 ? total : "";
+
+    const resumen = document.getElementById("resumenSeleccion");
+    if (resumen) {
+        resumen.textContent = total > 0
+            ? `Verbos seleccionados: ${total}`
+            : "No hay hojas seleccionadas.";
+    }
 }
 
 
